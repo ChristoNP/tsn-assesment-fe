@@ -1,103 +1,132 @@
-import Image from "next/image";
+"use client"
+import InputField from "@/components/InputField";
+import QuestionTable from "@/components/QuestionField";
+import SelectField from "@/components/SelectField";
+import { question } from "@/data/question";
+import { FormData } from "@/types/form";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const router = useRouter()
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const [form, setForm] = useState<FormData>({
+    firstName: "",
+    lastName: "",
+    department: "",
+    years: "",
+    q1: "",
+    q2: "",
+    q3: "",
+    q4: "",
+    q5: "",
+    q6: "",
+    q7: "",
+    q8: "",
+    q9: "",
+    q10: ""
+  })
+
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const handleChange = (key: keyof FormData, value: any) => {
+    setForm((prev) => ({ ...prev, [key]: value }))
+    setErrors((prev) => ({ ...prev, [key]: "" }))
+  }
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!form.firstName.trim()) newErrors.firstName = "First name is required"
+    if (!form.lastName.trim()) newErrors.lastName = "Last name is required"
+    if (!form.department.trim()) newErrors.department = "Department is required"
+    if (!form.years) newErrors.years = "Years is required"
+
+    for (let i = 1; i <= 10; i++) {
+      const key = `q${i}` as keyof FormData
+      if (form[key] === "") {
+        newErrors[key] = "This question is required"
+      }
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!validateForm()) {
+      return
+    }
+
+    const answers = Object.values(form).filter((v) => typeof v === "number") as number[]
+    const average = answers.reduce((a, b) => a + b, 0) / answers.length
+
+    localStorage.setItem("formData", JSON.stringify(form))
+    localStorage.setItem("result", average.toString())
+
+    router.push("/result")
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-6">Supervisor Review</h1>
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="flex justify-between gap-4">
+          <div className="flex-1">
+            <InputField
+              label="First Name"
+              value={form.firstName}
+              onChange={(val) => handleChange("firstName", val)}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            {errors.firstName && <p className="text-red-500 text-sm">{errors.firstName}</p>}
+          </div>
+          <div className="flex-1">
+            <InputField
+              label="Last Name"
+              value={form.lastName}
+              onChange={(val) => handleChange("lastName", val)}
+            />
+            {errors.lastName && <p className="text-red-500 text-sm">{errors.lastName}</p>}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+
+        <div className="w-[19rem]">
+          <InputField
+            label="Department"
+            value={form.department}
+            onChange={(val) => handleChange("department", val)}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          {errors.department && <p className="text-red-500 text-sm">{errors.department}</p>}
+        </div>
+
+        <SelectField
+          label="How many years have you been with this company?"
+          value={form.years}
+          onChange={(val) => handleChange("years", val)}
+          options={["<1", "1", "2", "3", "4", "5+", "10+"]}
+        />
+        {errors.years && <p className="text-red-500 text-sm">{errors.years}</p>}
+
+        <div className="space-y-4">
+          <h2 className="text-sm font-bold">
+            How do you feel about management? <span className="text-red-600">*</span>
+          </h2>
+          <QuestionTable questions={question} form={form} onChange={handleChange} />
+          {Object.keys(errors)
+            .filter((k) => k.startsWith("q"))
+            .length > 0 && (
+              <p className="text-red-500 text-sm">Please answer all questions</p>
+            )}
+        </div>
+
+        <button
+          type="submit"
+          className="mt-6 w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Submit
+        </button>
+      </form>
     </div>
-  );
+  )
 }
