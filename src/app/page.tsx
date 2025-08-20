@@ -4,6 +4,7 @@ import QuestionTable from "@/components/QuestionField";
 import SelectField from "@/components/SelectField";
 import { question } from "@/data/question";
 import { FormData } from "@/types/form";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -53,24 +54,55 @@ export default function Home() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!validateForm()) {
-      return
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    const answers = Object.values(form).filter(
+      (v) => typeof v === "number"
+    ) as number[];
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/submissions`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            firstName: form.firstName,
+            lastName: form.lastName,
+            department: form.department,
+            years: Number(form.years),
+            answers,
+          }),
+        }
+      );
+
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem("submissionId", data.data.id);
+        router.push("/result");
+      } else {
+        console.error("Error:", data);
+      }
+    } catch (err) {
+      console.error(err);
     }
+  };
 
-    const answers = Object.values(form).filter((v) => typeof v === "number") as number[]
-    const average = answers.reduce((a, b) => a + b, 0) / answers.length
-
-    localStorage.setItem("formData", JSON.stringify(form))
-    localStorage.setItem("result", average.toString())
-
-    router.push("/result")
-  }
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Supervisor Review</h1>
+      <div className="relative mb-6">
+        <Image
+          src="/mike-tinnion-3ym6i13Y9LU-unsplash.jpg"
+          alt="Illustration"
+          width={500}
+          height={300}
+          className="w-full h-48 object-cover"
+        />
+        <h1 className="absolute bottom-16 left-6 text-2xl font-bold text-gray-800">Supervisor Review</h1>
+      </div>
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="flex justify-between gap-4">
           <div className="flex-1">
